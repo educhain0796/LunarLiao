@@ -21,7 +21,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   const opts = {
-    redirectUri: 'http://localhost:3000/redirect', // Adjust this URL
+    redirectUri: 'https://lunar-liao-two.vercel.app/redirect', // Adjust this URL
     referralCode: 'PARTNER6', // Assign partner code
   };
 
