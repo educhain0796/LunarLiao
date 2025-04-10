@@ -1,59 +1,33 @@
 "use client"
 /* eslint-disable */
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Star, Sparkles, Moon, Coins, ArrowRight, ArrowLeft, Twitter, Instagram, LucideIcon } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { LoginButton } from '@opencampus/ocid-connect-js';
+import { useOCAuth } from '@opencampus/ocid-connect-js';
 
-// Type Definitions
-type MousePosition = {
-  x: number;
-  y: number;
-};
-
-type Feature = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  stats: string;
-};
-
-type HorizontalSection = {
-  title: string;
-  description: string;
-  image: string;
-  color: string;
-};
-
-type FooterSection = {
-  title: string;
-  links: string[];
-};
-
-type ScrollDirection = 'left' | 'right';
-
-const AstroSpotlightHero: React.FC = () => {
+const AstroSpotlightHero = () => {
   // Refs
-  const containerRef = useRef<HTMLDivElement>(null);
-  const horizontalRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef(null);
+  const horizontalRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   // State
-  const [mounted, setMounted] = useState<boolean>(false);
-  const [mousePosition, setMousePosition] = useState<MousePosition>({ x: 0, y: 0 });
-  const [currentWord, setCurrentWord] = useState<number>(0);
-  const [activeCard, setActiveCard] = useState<number>(0);
+  const [mounted, setMounted] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [currentWord, setCurrentWord] = useState(0);
+  const [activeCard, setActiveCard] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [isHovering, setIsHovering] = useState<number | null>(null);
+  const [isHovering, setIsHovering] = useState(null);
 
   // Constants
-  const words: string[] = ['Destiny', 'Fortune', 'Stars', 'Future', 'Cosmos'];
+  const words = ['Destiny', 'Fortune', 'Stars', 'Future', 'Cosmos'];
 
-  const features: Feature[] = [
+  const features = [
     {
       title: 'PERSONALIZED TOKENS',
       description: 'Unique NFTs based on your astrological chart',
@@ -80,7 +54,7 @@ const AstroSpotlightHero: React.FC = () => {
     }
   ];
 
-  const horizontalSections: HorizontalSection[] = [
+  const horizontalSections = [
     {
       title: "Celestial NFTs",
       description: "Each token represents a unique celestial moment captured in time, minted on the blockchain forever",
@@ -123,10 +97,9 @@ const AstroSpotlightHero: React.FC = () => {
       image: "https://cdn.pixabay.com/photo/2015/01/27/16/47/stars-614006_1280.jpg",
       color: "from-green-500"
     }
-
   ];
 
-  const footerLinks: FooterSection[] = [
+  const footerLinks = [
     {
       title: "Community",
       links: ["Discord", "Twitter", "Telegram"]
@@ -145,7 +118,7 @@ const AstroSpotlightHero: React.FC = () => {
   useEffect(() => {
     setMounted(true);
 
-    const handleMouseMove = (e: MouseEvent): void => {
+    const handleMouseMove = (e) => {
       setMousePosition({
         x: (e.clientX / window.innerWidth) * 100,
         y: (e.clientY / window.innerHeight) * 100,
@@ -165,13 +138,13 @@ const AstroSpotlightHero: React.FC = () => {
   }, [words.length]);
 
   // Scroll handling functions
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e) => {
     setIsDragging(true);
     setStartX(e.pageX - (scrollContainerRef.current?.offsetLeft || 0));
     setScrollLeft(scrollContainerRef.current?.scrollLeft || 0);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e) => {
     if (!isDragging) return;
     e.preventDefault();
     if (!scrollContainerRef.current) return;
@@ -185,11 +158,11 @@ const AstroSpotlightHero: React.FC = () => {
     setIsDragging(false);
   };
 
-  const handleCardHover = (index: number | null) => {
+  const handleCardHover = (index) => {
     setIsHovering(index);
   };
 
-  const handleManualScroll = (direction: ScrollDirection): void => {
+  const handleManualScroll = (direction) => {
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
       const scrollAmount = 320; // Width of one card
@@ -209,9 +182,24 @@ const AstroSpotlightHero: React.FC = () => {
     return null;
   }
 
+  const { authState, ocAuth } = useOCAuth();
+
+  // Ensure authState is defined before accessing its properties
+  if (!authState) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (authState.error) {
+    return <div>Error: {authState.error.message}</div>;
+  }
+
+  if (authState.isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="relative bg-black">
-       <motion.nav 
+      <motion.nav 
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b border-white/10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -238,15 +226,28 @@ const AstroSpotlightHero: React.FC = () => {
               
               {/* Get Started Button */}
               <Link href="/astrologer">
-              <motion.button
-                className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Get Started
-                
-                <ArrowRight className="w-4 h-4" />
-              </motion.button>
+                <motion.button
+                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {authState.isAuthenticated ? (
+                  <p>{JSON.stringify(ocAuth.getAuthState().OCId)}</p>
+                ) : (
+                  <LoginButton />
+                )}
+                  <ArrowRight className="w-4 h-4" />
+                </motion.button>
+              </Link>
+              <Link href="/astrologer">
+                <motion.button
+                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </motion.button>
               </Link>
             </div>
 
@@ -263,10 +264,6 @@ const AstroSpotlightHero: React.FC = () => {
           </div>
         </div>
       </motion.nav>
-
-
-
-
 
       {/* Hero Section */}
       <div ref={containerRef} className="relative min-h-screen overflow-hidden">
@@ -345,10 +342,6 @@ const AstroSpotlightHero: React.FC = () => {
                 </div>
               </div>
             </div>
-
-
-
-
 
             {/* Features Grid */}
             <motion.div
@@ -634,4 +627,3 @@ const AstroSpotlightHero: React.FC = () => {
 };
 
 export default AstroSpotlightHero;
-

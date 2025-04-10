@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserProvider, ethers } from 'ethers';
 import contractAddress from "../contractInfo/contractAddress.json"
 import contractAbi from "../contractInfo/contractAbi.json"
+import LoginButton from '../component/LoginButton';
+import { useOCAuth } from '@opencampus/ocid-connect-js';
 
 
 declare global {
@@ -46,11 +48,26 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  authState: any; // Replace `any` with the correct type if available
+  ocAuth: any; // Replace `any` with the correct type if available
 };
 
 // Custom Modal Component
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, authState, ocAuth }) => {
   if (!isOpen) return null;
+
+  // Ensure authState is defined before accessing its properties
+  if (!authState) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (authState.error) {
+    return <div>Error: {authState.error.message}</div>;
+  }
+
+  if (authState.isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AnimatePresence>
@@ -87,9 +104,16 @@ const Astrologer: React.FC = () => {
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
 
+  const { authState, ocAuth } = useOCAuth();
 
+  // Ensure authState is defined before rendering the component
+  if (!authState || authState.isLoading) {
+    return <div>Loading authentication...</div>;
+  }
 
-
+  if (authState.error) {
+    return <div>Error: {authState.error.message}</div>;
+  }
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -147,19 +171,19 @@ const Astrologer: React.FC = () => {
     luckyColor: "Red"
   };
 
-  useEffect(() => {
-    setMounted(true);
+  // useEffect(() => {
+  //   // setMounted(true);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
+  //   const handleMouseMove = (e: MouseEvent) => {
+  //     setMousePosition({
+  //       x: (e.clientX / window.innerWidth) * 100,
+  //       y: (e.clientY / window.innerHeight) * 100,
+  //     });
+  //   };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  //   window.addEventListener('mousemove', handleMouseMove);
+  //   return () => window.removeEventListener('mousemove', handleMouseMove);
+  // }, []);
 
   const handleClaimCoins = () => {
     setClaimable(false);
@@ -170,7 +194,7 @@ const Astrologer: React.FC = () => {
     console.log(claimable, "====================")
     const { abi } = contractAbi;
     const amount = 150;
-    if (window.ethereum !== undefined) {
+    if (window.ethereum !== 'undefined') {
 
       const provider = new BrowserProvider(window.ethereum);
 
@@ -268,6 +292,11 @@ const Astrologer: React.FC = () => {
               <Star className="w-6 h-6 text-purple-500" />
               Lunar Liáo
             </a>
+            {authState.isAuthenticated ? (
+              <p>You are logged in! {JSON.stringify(ocAuth.getAuthState())}</p>
+            ) : (
+              <LoginButton />
+            )}
             {!walletConnected ? (
               <motion.button
                 className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
@@ -455,7 +484,7 @@ const Astrologer: React.FC = () => {
       </div>
 
       {/* Chat Confirmation Modal */}
-      <Modal isOpen={showChatModal} onClose={() => setShowChatModal(false)}>
+      <Modal isOpen={showChatModal} onClose={() => setShowChatModal(false)} authState={authState} ocAuth={ocAuth}>
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
             <h3 className="text-xl font-semibold">Start Chat Session</h3>

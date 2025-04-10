@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@opencampus/ocid-connect-js": "^1.2.6",
     "ethers": "^6.13.4",
     "framer-motion": "^11.11.10",
     "lucide-react": "^0.453.0",
