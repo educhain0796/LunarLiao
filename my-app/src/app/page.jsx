@@ -226,18 +226,12 @@ const AstroSpotlightHero = () => {
               
               {/* Get Started Button */}
               <Link href="/astrologer">
-                <motion.button
-                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                
                   {authState.isAuthenticated ? (
                   <p>{JSON.stringify(ocAuth.getAuthState().OCId)}</p>
                 ) : (
                   <LoginButton />
                 )}
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
               </Link>
               <Link href="/astrologer">
                 <motion.button
