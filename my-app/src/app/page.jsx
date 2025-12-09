@@ -5,8 +5,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Star, Sparkles, Moon, Coins, ArrowRight, ArrowLeft, Twitter, Instagram, LucideIcon } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { LoginButton } from '@opencampus/ocid-connect-js';
-import { useOCAuth } from '@opencampus/ocid-connect-js';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
+import NetworkDisplay from './component/NetworkDisplay';
+
 
 const AstroSpotlightHero = () => {
   // Refs
@@ -182,24 +184,9 @@ const AstroSpotlightHero = () => {
     return null;
   }
 
-  const { authState, ocAuth } = useOCAuth();
-
-  // Ensure authState is defined before accessing its properties
-  if (!authState) {
-    return <div>Loading authentication...</div>;
-  }
-
-  if (authState.error) {
-    return <div>Error: {authState.error.message}</div>;
-  }
-
-  if (authState.isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="relative bg-black">
-      <motion.nav 
+      <motion.nav
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b border-white/10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -208,7 +195,7 @@ const AstroSpotlightHero = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <motion.a 
+            <motion.a
               href="#"
               className="text-white font-bold text-xl flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
@@ -223,16 +210,16 @@ const AstroSpotlightHero = () => {
               <Link href="#">Explore</Link>
               <Link href="#">Community</Link>
               <Link href="#">About</Link>
-              
+
+              {/* Network Display */}
+              <NetworkDisplay />
+
+              {/* Connect Button */}
+              <div className="connect-button-wrapper">
+                <ConnectButton />
+              </div>
+
               {/* Get Started Button */}
-              <Link href="/astrologer">
-                
-                  {authState.isAuthenticated ? (
-                  <p>{JSON.stringify(ocAuth.getAuthState().OCId)}</p>
-                ) : (
-                  <LoginButton />
-                )}
-              </Link>
               <Link href="/astrologer">
                 <motion.button
                   className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
@@ -246,7 +233,7 @@ const AstroSpotlightHero = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <motion.button 
+            <motion.button
               className="md:hidden p-2 text-white hover:text-purple-500"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}

@@ -2,13 +2,17 @@
 /* eslint-disable */
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, Star, MessageCircle, Calendar, Coins, ArrowRight, Search, X } from 'lucide-react';
+import { Wallet, Star, MessageCircle, Calendar, Coins, ArrowRight, Search, X, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BrowserProvider, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import contractAddress from "../contractInfo/contractAddress.json"
 import contractAbi from "../contractInfo/contractAbi.json"
-import LoginButton from '../component/LoginButton';
-import { useOCAuth } from '@opencampus/ocid-connect-js';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { toast } from 'sonner';
+import NetworkDisplay from '../component/NetworkDisplay';
+import { walletClientToSigner } from '../utils/ethers';
+
 
 
 declare global {
@@ -54,21 +58,6 @@ type ModalProps = {
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
-  const { authState, ocAuth } = useOCAuth();
-
-  // Ensure authState is defined before accessing its properties
-  if (!authState) {
-    return <div>Loading authentication...</div>;
-  }
-
-  if (authState.error) {
-    return <div>Error: {authState.error.message}</div>;
-  }
-
-  if (authState.isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <AnimatePresence>
       <motion.div
@@ -101,25 +90,19 @@ const Astrologer: React.FC = () => {
   const [selectedAstrologer, setSelectedAstrologer] = useState<Astrologer | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
   const [userBalance, setUserBalance] = useState(150); // Initial balance in LL coins
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
+
+  // Wagmi hooks
+  const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
 
 
 
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setWalletAddress(accounts[0]);
-        setWalletConnected(true);
-      } catch (error) {
-        console.error("Error connecting to wallet:", error);
-      }
-    } else {
-      alert('MetaMask is not installed. Please install it to use this feature.');
-    }
+  // Helper function to get explorer link
+  const getExplorerLink = (txHash: string) => {
+    return `https://odyssey.storyscan.xyz/tx/${txHash}`;
   };
 
   // Sample data
@@ -178,26 +161,87 @@ const Astrologer: React.FC = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const handleClaimCoins = () => {
+  const handleClaimCoins = async () => {
+    if (!isConnected || !address) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
     setClaimable(false);
-    withdraw()
+    await withdraw();
   };
 
   const withdraw = async () => {
-    console.log(claimable, "====================")
     const { abi } = contractAbi;
     const amount = 150;
-    if (window.ethereum !== undefined) {
 
-      const provider = new BrowserProvider(window.ethereum);
-
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const bounceContract = new ethers.Contract(contractAddress.address, abi, signer)
-
-      await (await bounceContract.mint(address, ethers.parseUnits(amount.toString(), 18))).wait();
+    if (!walletClient || !address) {
+      toast.error('Wallet not connected');
+      return;
     }
 
+    const toastId = toast.loading('Preparing transaction...');
+
+    try {
+      toast.loading('Please confirm in your wallet', { id: toastId });
+
+      const contract = new ethers.Contract(
+        contractAddress.address,
+        abi,
+        await walletClientToSigner(walletClient)
+      );
+
+      const tx = await contract.mint(address, ethers.parseUnits(amount.toString(), 18));
+
+      toast.loading(
+        <div className="flex items-center gap-2">
+          <span>Transaction submitted!</span>
+          <a
+            href={getExplorerLink(tx.hash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline flex items-center gap-1"
+          >
+            View <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>,
+        { id: toastId }
+      );
+
+      toast.loading('Waiting for confirmation...', { id: toastId });
+
+      await tx.wait();
+
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span>✅ Transaction passed!</span>
+          <a
+            href={getExplorerLink(tx.hash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline flex items-center gap-1"
+          >
+            View <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>,
+        { id: toastId, duration: 5000 }
+      );
+
+      setUserBalance(prev => prev + amount);
+    } catch (error: any) {
+      console.error('Mint error:', error);
+      const errorMessage = error?.reason || error?.message || 'Unknown error';
+
+      toast.error(
+        <div>
+          <div>❌ Transaction failed:</div>
+          <div className="text-sm mt-1">{errorMessage}</div>
+        </div>,
+        { id: toastId, duration: 5000 }
+      );
+
+      setClaimable(true);
+    }
   }
 
 
@@ -206,57 +250,101 @@ const Astrologer: React.FC = () => {
     setShowChatModal(true);
   };
 
-  const handleConfirmChat = () => {
-    // Add logic to handle chat confirmation and LL coin deduction
+  const handleConfirmChat = async () => {
+    if (!isConnected || !address) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
     const costStr = selectedAstrologer?.price.split(' ')[0];
     const cost = costStr ? parseInt(costStr) : 0;
 
     if (cost <= userBalance) {
-      setUserBalance(prev => prev - cost);
-      deposit()
-      // Additional logic for starting the chat
-      setShowChatModal(false);
+      await deposit();
     } else {
-      alert('Insufficient balance!');
+      toast.error('Insufficient balance!');
     }
   };
 
   const deposit = async () => {
     const { abi } = contractAbi;
     const charge = 1;
-    if (!window.ethereum) {
-      console.log("no wallet");
 
-    } else {
-
-
-      const provider = new BrowserProvider(window.ethereum);
-
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const bounceContract = new ethers.Contract(contractAddress.address, abi, signer)
-
-      await (await bounceContract.donate(address, "0x94A7Af5edB47c3B91d1B4Ffc2CA535d7aDA8CEDe", ethers.parseUnits(charge.toString(), 18))).wait();
+    if (!walletClient || !address) {
+      toast.error('Wallet not connected');
+      return;
     }
 
+    const toastId = toast.loading('Preparing transaction...');
+
+    try {
+      toast.loading('Please confirm in your wallet', { id: toastId });
+
+      const contract = new ethers.Contract(
+        contractAddress.address,
+        abi,
+        await walletClientToSigner(walletClient)
+      );
+
+      const tx = await contract.donate(
+        address,
+        "0x94A7Af5edB47c3B91d1B4Ffc2CA535d7aDA8CEDe",
+        ethers.parseUnits(charge.toString(), 18)
+      );
+
+      toast.loading(
+        <div className="flex items-center gap-2">
+          <span>Transaction submitted!</span>
+          <a
+            href={getExplorerLink(tx.hash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline flex items-center gap-1"
+          >
+            View <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>,
+        { id: toastId }
+      );
+
+      toast.loading('Waiting for confirmation...', { id: toastId });
+
+      await tx.wait();
+
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span>✅ Transaction passed!</span>
+          <a
+            href={getExplorerLink(tx.hash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline flex items-center gap-1"
+          >
+            View <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>,
+        { id: toastId, duration: 5000 }
+      );
+
+      const costStr = selectedAstrologer?.price.split(' ')[0];
+      const cost = costStr ? parseInt(costStr) : 0;
+      setUserBalance(prev => prev - cost);
+      setShowChatModal(false);
+    } catch (error: any) {
+      console.error('Transaction error:', error);
+      const errorMessage = error?.reason || error?.message || 'Unknown error';
+
+      toast.error(
+        <div>
+          <div>❌ Transaction failed:</div>
+          <div className="text-sm mt-1">{errorMessage}</div>
+        </div>,
+        { id: toastId, duration: 5000 }
+      );
+    }
   }
 
   if (!mounted) return null;
-
-  const { authState, ocAuth } = useOCAuth();
-
-  // Ensure authState is defined before accessing its properties
-  if (!authState) {
-    return <div>Loading authentication...</div>;
-  }
-
-  if (authState.error) {
-    return <div>Error: {authState.error.message}</div>;
-  }
-
-  if (authState.isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -301,26 +389,10 @@ const Astrologer: React.FC = () => {
               Lunar Liáo
             </a>
             <div className="flex items-center gap-4 ml-auto">
-              {authState.isAuthenticated ? (
-                <p className="text-sm text-white/60">{JSON.stringify(ocAuth.getAuthState().OCId)}</p>
-              ) : (
-                <LoginButton />
-              )}
-              {!walletConnected ? (
-                <motion.button
-                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={connectWallet}
-                >
-                  <Wallet className="w-4 h-4" />
-                  Connect Wallet
-                </motion.button>
-              ) : (
-                <div className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full text-sm font-medium hover:shadow-lg transition-shadow duration-300">
-                  <span className="text-white text-xs">{walletAddress.slice(0, 5) + '...' + walletAddress.slice(-4)}</span>
-                </div>
-              )}
+              <NetworkDisplay />
+              <div className="connect-button-wrapper">
+                <ConnectButton />
+              </div>
             </div>
           </div>
         </div>
