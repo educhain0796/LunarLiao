@@ -5,9 +5,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Star, Sparkles, Moon, Coins, ArrowRight, ArrowLeft, Twitter, Instagram, LucideIcon } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
-import NetworkDisplay from './component/NetworkDisplay';
 
 
 const AstroSpotlightHero = () => {
@@ -186,66 +183,7 @@ const AstroSpotlightHero = () => {
 
   return (
     <div className="relative bg-black">
-      <motion.nav
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b border-white/10"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <motion.a
-              href="#"
-              className="text-white font-bold text-xl flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-            >
-              <Star className="w-6 h-6 text-purple-500" />
-              Lunar Liáo
-            </motion.a>
 
-            {/* Navigation Links */}
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="#">Features</Link>
-              <Link href="#">Explore</Link>
-              <Link href="#">Community</Link>
-              <Link href="/chat" className="text-purple-400 hover:text-purple-300">AI Chat</Link>
-              <Link href="#">About</Link>
-
-              {/* Network Display */}
-              <NetworkDisplay />
-
-              {/* Connect Button */}
-              <div className="connect-button-wrapper">
-                <ConnectButton />
-              </div>
-
-              {/* Get Started Button */}
-              <Link href="/astrologer">
-                <motion.button
-                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-full text-white font-semibold text-sm shadow-lg shadow-purple-500/25 flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <motion.button
-              className="md:hidden p-2 text-white hover:text-purple-500"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </motion.button>
-          </div>
-        </div>
-      </motion.nav>
 
       {/* Hero Section */}
       <div ref={containerRef} className="relative min-h-screen overflow-hidden">

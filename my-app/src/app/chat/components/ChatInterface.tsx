@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { useChat } from '@ai-sdk/react';
 import { Send, Sparkles, User, Bot, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -25,126 +24,24 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
     const [localInput, setLocalInput] = React.useState('');
-    const [apiTested, setApiTested] = React.useState(false);
+    const [messages, setMessages] = React.useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+    const [isFetchingHistory, setIsFetchingHistory] = React.useState(false);
 
-    // Test API endpoint on mount
+    // Track message list changes for render debugging
+    const lastMessageCount = React.useRef<number>(0);
     useEffect(() => {
-        if (!apiTested && userId) {
-            console.log("🧪 Testing API endpoint...");
-            fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [{ role: 'user', content: 'test' }],
-                    userId: userId,
-                })
-            })
-            .then(res => {
-                console.log("✅ API endpoint is reachable, status:", res.status);
-                setApiTested(true);
-            })
-            .catch(err => {
-                console.error("❌ API endpoint test failed:", err);
-                setApiTested(true);
-            });
+        if (messages.length !== lastMessageCount.current) {
+            console.log("🧾 Messages changed:");
+            console.log("  - Previous count:", lastMessageCount.current);
+            console.log("  - New count:", messages.length);
+            console.log("  - Last message:", messages[messages.length - 1]);
+            lastMessageCount.current = messages.length;
+        } else {
+            console.log("🧾 Messages effect fired with same count:", messages.length);
         }
-    }, [userId, apiTested]);
-
-    const chatHook = useChat({ // Store the entire hook result
-        api: '/api/chat',
-        body: {
-            userId: userId || undefined, // Only include if available
-            id: chatId || undefined,
-        },
-        onError: (error) => {
-            console.error("=".repeat(80));
-            console.error("❌ Chat Error (Frontend):");
-            console.error("  - Error:", error);
-            console.error("  - Error type:", error?.constructor?.name || typeof error);
-            console.error("  - Error message:", error?.message || "No message");
-            console.error("  - Timestamp:", new Date().toISOString());
-            console.error("=".repeat(80));
-        },
-        onResponse: (response) => {
-            console.log("=".repeat(80));
-            console.log("📥 Chat Response Received:");
-            console.log("  - Status:", response.status, response.statusText);
-            console.log("  - Headers:", Object.fromEntries(response.headers.entries()));
-            
-            const newChatId = response.headers.get('X-Chat-Id');
-            const isOffline = response.headers.get('X-Lunar-Offline') === 'true';
-            const dbStatus = response.headers.get('X-DB-Status');
-            const requestTime = response.headers.get('X-Request-Time');
-            
-            console.log("  - Chat ID:", newChatId);
-            console.log("  - DB Status:", dbStatus || (isOffline ? 'offline' : 'unknown'));
-            console.log("  - Request Time:", requestTime ? `${requestTime}ms` : 'N/A');
-            console.log("=".repeat(80));
-
-            if (newChatId && newChatId !== chatId) {
-                console.log("🆕 New chat created, updating state:", newChatId);
-                onChatCreated(newChatId);
-                // If backend is offline, ensure we track this ID locally immediately
-                if (isOffline) {
-                    const storedChats = JSON.parse(localStorage.getItem('lunar_chats') || '[]');
-                    const exists = storedChats.find((c: any) => c._id === newChatId);
-                    if (!exists) {
-                        const newChat = {
-                            _id: newChatId,
-                            title: 'New Chat',
-                            updatedAt: new Date().toISOString(),
-                            messages: []
-                        };
-                        localStorage.setItem('lunar_chats', JSON.stringify([newChat, ...storedChats]));
-                        console.log("💾 Saved new chat to localStorage");
-                    }
-                }
-            }
-        },
-        onFinish: (message) => {
-            // Save to local storage for persistence if offline or as backup
-            if (chatId) {
-                const storedChats = JSON.parse(localStorage.getItem('lunar_chats') || '[]');
-                const chatIndex = storedChats.findIndex((c: any) => c._id === chatId);
-
-                if (chatIndex >= 0) {
-                    storedChats[chatIndex].messages = [...messages, message];
-                    storedChats[chatIndex].updatedAt = new Date().toISOString();
-                    // Update title if it's the first message
-                    if (storedChats[chatIndex].messages.length === 2) {
-                        storedChats[chatIndex].title = messages[0].content.substring(0, 50);
-                    }
-                    localStorage.setItem('lunar_chats', JSON.stringify(storedChats));
-                } else {
-                    // New chat that wasn't in local storage yet (maybe started online then went offline? or fully offline)
-                    // If we have a chatId but it's not in local storage, add it
-                    const newChat = {
-                        _id: chatId,
-                        title: messages[0]?.content.substring(0, 50) || 'New Chat',
-                        updatedAt: new Date().toISOString(),
-                        messages: [...messages, message]
-                    };
-                    localStorage.setItem('lunar_chats', JSON.stringify([newChat, ...storedChats]));
-                }
-            }
-        },
-    });
-
-    // Log what the hook returns
-    useEffect(() => {
-        console.log("🔍 useChat Hook Debug:");
-        console.log("  - Hook object:", chatHook);
-        console.log("  - Hook keys:", chatHook ? Object.keys(chatHook) : "Hook is null/undefined");
-        console.log("  - append type:", typeof chatHook?.append);
-        console.log("  - append value:", chatHook?.append);
-        console.log("  - stop type:", typeof chatHook?.stop);
-        console.log("  - messages:", chatHook?.messages?.length || 0);
-        console.log("  - isLoading:", chatHook?.isLoading);
-        console.log("  - error:", chatHook?.error);
-    }, [chatHook]);
-
-    // Destructure with defaults to prevent undefined errors
-    const { messages = [], isLoading = false, append, stop = () => {}, error = null } = chatHook || {};
+    }, [messages]);
 
     // Log hook state
     useEffect(() => {
@@ -153,38 +50,57 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
         console.log("  - chatId:", chatId || "New chat");
         console.log("  - messages count:", messages.length);
         console.log("  - isLoading:", isLoading);
-        console.log("  - append available:", !!append);
-        console.log("  - append type:", typeof append);
-        console.log("  - stop available:", !!stop);
         if (error) {
             console.error("  - Error present:", error);
         }
-        if (!append) {
-            console.warn("⚠️  Append function is not available from useChat hook");
-            console.warn("  - This might indicate the hook hasn't initialized properly");
-            console.warn("  - Check if the API endpoint '/api/chat' is accessible");
-        }
-    }, [userId, chatId, messages.length, isLoading, error, append, stop]);
+    }, [userId, chatId, messages.length, isLoading, error]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSendMessage = async (e?: React.FormEvent) => {
+    // Fetch chat history when a chatId is selected
+    useEffect(() => {
+        const fetchHistory = async () => {
+            if (!chatId || !userId) {
+                setMessages([]);
+                return;
+            }
+
+            setIsFetchingHistory(true);
+            setError(null);
+            try {
+                const res = await fetch(`/api/chats/${chatId}`);
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data?.error || res.statusText);
+                }
+                if (Array.isArray(data?.messages)) {
+                    setMessages(data.messages.map((m: any) => ({
+                        role: m.role === 'assistant' ? 'assistant' : 'user',
+                        content: m.content || ''
+                    })));
+                } else {
+                    setMessages([]);
+                }
+            } catch (err: any) {
+                console.error("❌ Failed to fetch chat history:", err);
+                setError(err?.message || 'Failed to load chat history');
+                setMessages([]);
+            } finally {
+                setIsFetchingHistory(false);
+            }
+        };
+
+        fetchHistory();
+    }, [chatId, userId]);
+
+    const handleSendMessage = async (e?: React.FormEvent, overrideText?: string) => {
         e?.preventDefault();
 
-        // If loading, the button acts as Stop
-        if (isLoading) {
-            console.log("⏹️  Stopping current request...");
-            if (stop) {
-                stop();
-            } else {
-                console.error("❌ Stop function not available");
-            }
-            return;
-        }
+        const content = overrideText ?? localInput;
 
-        if (!localInput.trim()) {
+        if (!content.trim()) {
             console.log("⚠️  Empty message, ignoring");
             return;
         }
@@ -194,23 +110,6 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
             return;
         }
 
-        if (!append) {
-            console.error("=".repeat(80));
-            console.error("❌ Append function not available from useChat hook");
-            console.error("  - Hook state:", {
-                messages: messages.length,
-                isLoading,
-                hasAppend: !!append,
-                hasStop: !!stop,
-                error: error?.message || null
-            });
-            console.error("  - This usually means the useChat hook hasn't initialized properly");
-            console.error("  - Check if the API endpoint is accessible and userId is valid");
-            console.error("=".repeat(80));
-            return;
-        }
-
-        const content = localInput;
         console.log("=".repeat(80));
         console.log("📤 Sending Message:");
         console.log("  - Content:", content.substring(0, 100) + (content.length > 100 ? '...' : ''));
@@ -219,14 +118,45 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
         console.log("  - Timestamp:", new Date().toISOString());
         console.log("=".repeat(80));
         
-        setLocalInput('');
+        if (!overrideText) {
+            setLocalInput('');
+        }
+
+        const nextMessages = [...messages, { role: 'user', content }];
+        setMessages(nextMessages);
+        setIsLoading(true);
+        setError(null);
 
         try {
-            await append({
-                role: 'user',
-                content: content,
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: nextMessages,
+                    userId: userId,
+                    id: chatId || undefined,
+                })
             });
-            console.log("✅ Message sent successfully");
+
+            console.log("📥 API response status:", res.status);
+            const resJson = await res.json().catch(() => null);
+            console.log("📥 API response body:", resJson);
+
+            const newChatId = res.headers.get('X-Chat-Id') || resJson?.chatId;
+            if (newChatId && newChatId !== chatId) {
+                onChatCreated(newChatId);
+            }
+
+            if (!res.ok) {
+                throw new Error(resJson?.error || res.statusText);
+            }
+
+            if (resJson?.message?.content) {
+                const updated = [...nextMessages, { role: 'assistant', content: resJson.message.content }];
+                setMessages(updated);
+            } else {
+                throw new Error('No assistant message returned');
+            }
         } catch (err: any) {
             console.error("=".repeat(80));
             console.error("❌ Failed to send message:");
@@ -234,35 +164,33 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
             console.error("  - Error message:", err?.message || "No message");
             console.error("  - Error stack:", err?.stack?.substring(0, 300));
             console.error("=".repeat(80));
-            setLocalInput(content); // Restore input on error
+            setError(err?.message || 'Failed to send message');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleSuggestionClick = (text: string) => {
         console.log("💡 Suggestion clicked:", text);
-        if (!append) {
-            console.warn("⚠️  Append not available, setting input instead");
+        if (!userId) {
+            console.error("❌ No userId, cannot send message");
             setLocalInput(text);
             return;
         }
-        
-        if (!userId) {
-            console.error("❌ No userId, cannot send message");
-            return;
-        }
 
-        try {
-            append({
-                role: 'user',
-                content: text,
-            });
-        } catch (err: any) {
-            console.error("❌ Failed to send suggestion:", err);
-            setLocalInput(text); // Fallback to input
-        }
+        setLocalInput(text);
+        handleSendMessage(undefined, text);
     };
 
-    const isEmpty = messages.length === 0;
+    const isEmpty = messages.length === 0 && !isFetchingHistory && !isLoading;
+
+    useEffect(() => {
+        console.log("🖥️ Render state:");
+        console.log("  - isEmpty:", isEmpty);
+        console.log("  - messages length:", messages.length);
+        console.log("  - isLoading:", isLoading);
+        console.log("  - isFetchingHistory:", isFetchingHistory);
+    }, [isEmpty, messages.length, isLoading, isFetchingHistory]);
 
     return (
         <div className="flex flex-col h-full bg-gradient-to-b from-black via-purple-950/10 to-black">
@@ -271,12 +199,19 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mx-6 mt-4"
+                    className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mx-6 mt-4 relative"
                 >
+                    <button
+                        onClick={() => setError(null)}
+                        className="absolute top-2 right-2 text-red-200 hover:text-white transition"
+                        aria-label="Dismiss error"
+                    >
+                        ×
+                    </button>
                     <div className="flex items-start gap-3">
                         <div className="text-red-400 font-bold">❌ Error:</div>
                         <div className="flex-1 text-red-300 text-sm">
-                            {error.message || 'An error occurred while processing your request. Please check the console for details.'}
+                            {error || 'An error occurred while processing your request. Please check the console for details.'}
                         </div>
                     </div>
                     <div className="mt-2 text-red-400/70 text-xs">
@@ -378,7 +313,7 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
                         </AnimatePresence>
 
                         {/* Loading Indicator */}
-                        {isLoading && (
+                        {(isLoading || isFetchingHistory) && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -424,7 +359,10 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
                         <div className="flex-1 relative">
                             <input
                                 value={localInput}
-                                onChange={(e) => setLocalInput(e.target.value)}
+                                onChange={(e) => {
+                                    setLocalInput(e.target.value);
+                                    if (error) setError(null);
+                                }}
                                 placeholder={userId ? (isLoading ? "Lunar AI is thinking..." : "Ask about your cosmic journey...") : "Connect wallet to chat"}
                                 disabled={!userId || isLoading}
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"

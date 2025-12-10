@@ -7,10 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import contractAddress from "../contractInfo/contractAddress.json"
 import contractAbi from "../contractInfo/contractAbi.json"
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { toast } from 'sonner';
-import NetworkDisplay from '../component/NetworkDisplay';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { walletClientToSigner } from '../utils/ethers';
 
 
@@ -376,27 +374,8 @@ const Astrologer: React.FC = () => {
         />
       </div>
 
-      {/* Navbar */}
-      <motion.nav
-        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b border-white/10"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            <a href="/" className="text-white font-bold text-xl flex items-center gap-2">
-              <Star className="w-6 h-6 text-purple-500" />
-              Lunar Liáo
-            </a>
-            <div className="flex items-center gap-4 ml-auto">
-              <NetworkDisplay />
-              <div className="connect-button-wrapper">
-                <ConnectButton />
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.nav>
+      {/* Navbar handled globally in layout */}
+
 
       {/* Main Content */}
       <div className="relative pt-28 pb-16 container mx-auto px-4">
