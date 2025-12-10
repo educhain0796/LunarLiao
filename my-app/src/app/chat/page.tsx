@@ -12,6 +12,9 @@ import NetworkDisplay from '../component/NetworkDisplay';
 export default function ChatPage() {
     const { address } = useAccount();
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const bumpRefresh = () => setRefreshKey((k) => k + 1);
 
     const handleNewChat = async () => {
         // If no wallet, just reset to a fresh local session
@@ -34,6 +37,7 @@ export default function ChatPage() {
 
             if (data?._id) {
                 setCurrentChatId(data._id);
+                bumpRefresh();
             } else {
                 setCurrentChatId(null);
             }
@@ -49,6 +53,11 @@ export default function ChatPage() {
 
     const handleChatCreated = (id: string) => {
         setCurrentChatId(id);
+        bumpRefresh();
+    };
+
+    const handleMessagesUpdated = () => {
+        bumpRefresh();
     };
 
     return (
@@ -63,12 +72,14 @@ export default function ChatPage() {
                         currentChatId={currentChatId}
                         onSelectChat={handleSelectChat}
                         onNewChat={handleNewChat}
+                        refreshKey={refreshKey}
                     />
                     <div className="flex-1">
                         <ChatInterface
                             userId={address}
                             chatId={currentChatId}
                             onChatCreated={handleChatCreated}
+                            onMessagesUpdated={handleMessagesUpdated}
                         />
                     </div>
                 </div>

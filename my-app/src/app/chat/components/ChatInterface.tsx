@@ -20,7 +20,7 @@ const suggestions = [
     { icon: '✨', text: "Lucky numbers for today" },
 ];
 
-export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInterfaceProps) {
+export default function ChatInterface({ userId, chatId, onChatCreated, onMessagesUpdated }: ChatInterfaceProps & { onMessagesUpdated?: () => void }) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
     const [localInput, setLocalInput] = React.useState('');
@@ -70,7 +70,7 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
             setIsFetchingHistory(true);
             setError(null);
             try {
-                const res = await fetch(`/api/chats/${chatId}`);
+                const res = await fetch(`/api/chats/${chatId}?userId=${encodeURIComponent(userId)}`);
                 const data = await res.json();
                 if (!res.ok) {
                     throw new Error(data?.error || res.statusText);
@@ -155,6 +155,7 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
             if (resJson?.message?.content) {
                 const updated = [...nextMessages, { role: 'assistant', content: resJson.message.content }];
                 setMessages(updated);
+                onMessagesUpdated?.();
             } else {
                 throw new Error('No assistant message returned');
             }

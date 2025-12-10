@@ -7,17 +7,26 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
+        return NextResponse.json({ error: 'UserId required' }, { status: 401 });
     }
 
     await dbConnect();
 
     try {
-        // Return list of chats, sorted by newest updated
-        const chats = await Chat.find({ userId })
-            .select('title createdAt updatedAt') // Exclude messages for list view to save bandwidth
-            .sort({ updatedAt: -1 })
-            .limit(50); // Limit history size
+        // Return list of chats with message count, sorted by newest updated
+        const chats = await Chat.aggregate([
+            { $match: { userId } },
+            {
+                $project: {
+                    title: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    messageCount: { $size: { $ifNull: ["$messages", []] } }
+                }
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 50 }
+        ]);
 
         return NextResponse.json(chats);
     } catch (error) {
@@ -29,7 +38,7 @@ export async function POST(req: NextRequest) {
     const { userId, title } = await req.json();
 
     if (!userId) {
-        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
+        return NextResponse.json({ error: 'UserId required' }, { status: 401 });
     }
 
     await dbConnect();
