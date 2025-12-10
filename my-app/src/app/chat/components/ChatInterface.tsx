@@ -76,10 +76,11 @@ export default function ChatInterface({ userId, chatId, onChatCreated }: ChatInt
                     throw new Error(data?.error || res.statusText);
                 }
                 if (Array.isArray(data?.messages)) {
-                    setMessages(data.messages.map((m: any) => ({
+                    const normalized = data.messages.map((m: any): { role: 'user' | 'assistant'; content: string } => ({
                         role: m.role === 'assistant' ? 'assistant' : 'user',
                         content: m.content || ''
-                    })));
+                    }));
+                    setMessages(normalized);
                 } else {
                     setMessages([]);
                 }
