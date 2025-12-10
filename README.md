@@ -1,26 +1,34 @@
-# LunarLiao Build on OPENCAMPUS EDUCHAIN CHAIN
+# LunarLiao - Built on Story Aeneid Testnet
 
 **Lunar Liao** : 
 
 Lunar Liao is a decentralized astrology platform that provides users with personalized daily readings and Kundli analysis. It fosters anonymous discussions with professional astrologers, creating a safe space for exploration and learning. Key features include:
 
-Personalized Tokens: Users receive tokens that enhance their experience and interaction on the platform.
+- **Personalized Tokens**: Users receive tokens that enhance their experience and interaction on the platform.
+- **Daily Claim Tokens**: Users can claim tokens daily, encouraging regular engagement and participation.
+- **Anonymous Interactions**: The platform allows users to communicate with astrologers and others without revealing their identity.
+- **Smart Contracts**: Secure and transparent transactions ensure trust and integrity within the platform.
+- **AI-Powered Chat**: Chat with Lunar AI for astrological insights, powered by Gemini.
 
-Daily Claim Tokens: Users can claim tokens daily, encouraging regular engagement and participation.
+## Network Details
 
-Anonymous Interactions: The platform allows users to communicate with astrologers and others without revealing their identity.
-
-Smart Contracts: Secure and transparent transactions ensure trust and integrity within the platform.
+| Property | Value |
+|----------|-------|
+| **Chain** | Story Aeneid Testnet |
+| **Chain ID** | 1315 |
+| **RPC URL** | https://rpc.ankr.com/story_aeneid_testnet |
+| **Explorer** | https://aeneid.storyscan.xyz |
+| **Native Token** | IP |
 
 --------------
 
 ## Getting Started
 
-## Add LL contract address to wallet
+### Add LL Contract Address to Wallet
 
-Contract address : 0xc4D12645D522D3dc1BDf67Bcb04f1B4a8EbDc918
+**Contract Address**: `0xE3E18005deF4B02ACEc878c7139dE6c92CB4290f`
 
-[Verify LL on testnet](https://edu-chain-testnet.blockscout.com/token/0xc4D12645D522D3dc1BDf67Bcb04f1B4a8EbDc918)
+[View LL Token on Story Aeneid Explorer](https://aeneid.storyscan.xyz/token/0xE3E18005deF4B02ACEc878c7139dE6c92CB4290f)
 
 ----------
 
