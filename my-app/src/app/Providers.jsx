@@ -19,15 +19,15 @@ import { WagmiProvider } from 'wagmi';
 import { Toaster } from 'sonner';
 import '@rainbow-me/rainbowkit/styles.css';
 
-const storyTestnet = {
-    id: 1516,
-    name: 'Story Odyssey Testnet',
+const storyAeneidTestnet = {
+    id: 1315,
+    name: 'Story Aeneid Testnet',
     nativeCurrency: { name: 'IP', symbol: 'IP', decimals: 18 },
     rpcUrls: {
-        default: { http: ['https://odyssey.storyrpc.io'] },
+        default: { http: ['https://rpc.ankr.com/story_aeneid_testnet'] },
     },
     blockExplorers: {
-        default: { name: 'StoryScan', url: 'https://odyssey.storyscan.xyz' },
+        default: { name: 'StoryScan', url: 'https://aeneid.storyscan.xyz' },
     },
     testnet: true,
 };
@@ -44,7 +44,7 @@ const config = getDefaultConfig({
             wallets: [argentWallet, trustWallet, ledgerWallet],
         },
     ],
-    chains: [storyTestnet],
+    chains: [storyAeneidTestnet],
     ssr: true,
 });
 

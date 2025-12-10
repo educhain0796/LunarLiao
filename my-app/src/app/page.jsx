@@ -209,6 +209,7 @@ const AstroSpotlightHero = () => {
               <Link href="#">Features</Link>
               <Link href="#">Explore</Link>
               <Link href="#">Community</Link>
+              <Link href="/chat" className="text-purple-400 hover:text-purple-300">AI Chat</Link>
               <Link href="#">About</Link>
 
               {/* Network Display */}
