@@ -34,7 +34,7 @@ const AstroSpotlightHero = () => {
       stats: '10K+ Minted'
     },
     {
-      title: 'OPENCAMPUS EDUCHAIN CHAIN',
+      title: 'STORY AENEID TESTNET',
       description: 'Secure blockchain technology for celestial data',
       icon: Star,
       stats: '99.9% Uptime'

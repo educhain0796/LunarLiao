@@ -65,4 +65,78 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Project Description Brief
+## Project Description
+
+**Lunar Liao** is a next-generation decentralized astrology platform that bridges ancient wisdom with modern blockchain technology. Built on the Story Aeneid Testnet, Lunar Liao revolutionizes how users access astrological services by creating a transparent, secure, and engaging ecosystem for cosmic guidance.
+
+### What is Lunar Liao?
+
+Lunar Liao is more than just an astrology app—it's a comprehensive Web3 platform that combines:
+
+- **AI-Powered Astrological Consultations**: Interact with Lunar AI, an advanced astrological assistant powered by Google's Gemini model, capable of providing personalized readings, birth chart analysis, and predictive insights.
+- **Professional Astrologer Network**: Connect with verified astrologers for one-on-one consultations, Kundli analysis, and specialized readings in a secure, anonymous environment.
+- **Blockchain-Based Token Economy**: Earn and spend LL (Lunar Liao) tokens for services, daily rewards, and platform engagement, all secured by smart contracts on Story Protocol.
+- **Community-Driven Experience**: Participate in a vibrant community of astrology enthusiasts while maintaining complete privacy and control over your data.
+
+### Core Features
+
+#### 🤖 Lunar AI Chat
+Get instant astrological insights from our advanced AI assistant:
+- Real-time horoscope readings
+- Birth chart interpretations
+- Daily predictions and cosmic guidance
+- Personalized recommendations based on planetary positions
+
+#### 🔮 Professional Astrologer Marketplace
+- Browse verified astrologers with diverse specializations
+- Book sessions using LL tokens
+- Anonymous consultations for privacy
+- Rating and review system for quality assurance
+
+#### 💎 LL Token Ecosystem
+- **Daily Claims**: Earn 150 LL tokens daily just for being an active user
+- **Session Payments**: Pay for premium astrological services
+- **Transparent Pricing**: All fees are blockchain-verified
+- **Smart Contract Security**: Automated, trustless transactions
+
+#### 📊 Kundli & Birth Chart Analysis
+- Generate detailed Vedic birth charts
+- Planetary position analysis
+- Dasha predictions and transit forecasts
+- Personalized life event timing
+
+### Technology Stack
+
+- **Frontend**: Next.js 16, React 19, Framer Motion for animations
+- **Blockchain**: Story Aeneid Testnet (Chain ID: 1315)
+- **AI Engine**: Google Gemini 2.5 Flash for intelligent conversations
+- **Smart Contracts**: Solidity-based ERC-20 token (LL)
+- **Wallet Integration**: RainbowKit for seamless Web3 connectivity
+- **Database**: MongoDB for user data persistence with offline fallback
+- **Styling**: Tailwind CSS with custom cosmic theme
+
+### Why Story Protocol?
+
+Lunar Liao leverages Story Protocol's innovative blockchain infrastructure to:
+- Ensure transparent and immutable transaction records
+- Enable fast, low-cost token transfers
+- Provide a robust foundation for future NFT integrations (zodiac collectibles, birth chart NFTs)
+- Support decentralized identity and privacy features
+
+### Vision
+
+Our vision is to democratize access to astrological wisdom while preserving user privacy and ensuring fair compensation for astrologers. By combining blockchain technology with AI, we're creating a platform where:
+- Users own their data and astrological profiles
+- Astrologers receive fair, transparent compensation
+- All transactions are verifiable and secure
+- The community drives platform evolution through governance (coming soon)
+
+### Getting Involved
+
+Whether you're an astrology enthusiast, a professional astrologer, or a blockchain developer, Lunar Liao welcomes you. Connect your wallet, claim your daily tokens, and start your cosmic journey today!
+
+---
+
+**Contract Address**: `0xE3E18005deF4B02ACEc878c7139dE6c92CB4290f`  
+**Network**: Story Aeneid Testnet (Chain ID: 1315)  
+**Explorer**: [View on StoryScan](https://aeneid.storyscan.xyz/token/0xE3E18005deF4B02ACEc878c7139dE6c92CB4290f)
